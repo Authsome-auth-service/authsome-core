@@ -30,5 +30,6 @@ public interface OtpService {
     FetchedOtp generateAndSaveOtp(OtpType otpType, int otpLength, int minNumber, int minAlphabet,
                                   int maxNumber, int maxAlphabet, int expiresAfterSecond,
                                   String context, Map<String, String> metadata);
-    //TODO tips for otp service id + context can be unique, partition can be made on context
+
+    FetchedOtp getOtpById(String id);
 }

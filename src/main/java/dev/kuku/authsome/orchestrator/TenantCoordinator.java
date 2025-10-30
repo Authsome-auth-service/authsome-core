@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Orchestrator service for tenant-related operations.
@@ -59,11 +60,8 @@ public class TenantCoordinator {
         log.info("Start tenant signup process for identityType: {}, identity: {}, username: {}", identityType, identity, username);
 
         // Validate identity type is supported for signup
-        switch (identityType) {
-            case EMAIL:
-                break;
-            default:
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported identity type for signup");
+        if (Objects.requireNonNull(identityType) != IdentityType.EMAIL) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported identity type for signup");
         }
 
         // Check if the identity is already registered
@@ -110,5 +108,64 @@ public class TenantCoordinator {
 
         // Return the OTP ID as the signup token for verification
         return fetchedOtp.id;
+    }
+
+    /**
+     * Completes the tenant signup process by verifying the OTP and creating the tenant account.
+     * <p>
+     * This method performs the following steps:
+     * <ol>
+     *   <li>Validates that the provided OTP is not null or empty</li>
+     *   <li>Retrieves the stored OTP record using the signup token</li>
+     *   <li>Verifies the OTP code matches the user-provided value</li>
+     *   <li>Validates the OTP context matches the signup process</li>
+     *   <li>Extracts and validates signup metadata (identity, username, password)</li>
+     *   <li>Decrypts the stored password</li>
+     *   <li>Creates the tenant account with the provided credentials</li>
+     *   <li>Associates the verified identity with the newly created tenant</li>
+     * </ol>
+     *
+     * @param token the signup token (OTP ID) returned from {@link #startTenantSignupProcess}
+     * @param otp   the 4-digit verification code sent to the user's identity
+     * @throws ResponseStatusException with BAD_REQUEST if the OTP is invalid, the token is invalid,
+     *                                 the OTP doesn't match, the context is incorrect, or metadata is missing
+     */
+    public void completeTenantSignupProcess(String token, String otp) {
+        log.trace("completeTenantSignupProcess : {}, {}", token, otp);
+        //validate if otp is valid
+        if (otp == null || otp.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OTP cannot be null or empty");
+        }
+        //1. fetch otp from otp service by id (token)
+        FetchedOtp fetchedOtp = otpService.getOtpById(token);
+        // check if otp exists
+        if (fetchedOtp == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token");
+        }
+        //2. validate otp
+        if (!fetchedOtp.code.equals(otp)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid otp");
+        }
+        // validate context
+        if (!fetchedOtp.context.equals("AUTHSOME_TENANT_SIGNUP")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid context");
+        }
+        // validate metadata
+        if (fetchedOtp.metadata == null ||
+            !fetchedOtp.metadata.containsKey("identity") ||
+            !fetchedOtp.metadata.containsKey("identityType") ||
+            !fetchedOtp.metadata.containsKey("username") ||
+            !fetchedOtp.metadata.containsKey("password")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid metadata");
+        }
+        String identity = fetchedOtp.metadata.get("identity").toString();
+        IdentityType identityType = IdentityType.valueOf((String) fetchedOtp.metadata.get("identityType"));
+        String username = fetchedOtp.metadata.get("username").toString();
+        String encryptedPassword = fetchedOtp.metadata.get("password").toString();
+        String password = encryptionUtil.decrypt(encryptedPassword);
+        //3. create tenant
+        FetchedTenant createdUser = tenantService.createTenant(username, password);
+        // Add identity for the tenant
+        tenantService.addIdentityForTenant(createdUser.id(), identityType, identity);
     }
 }

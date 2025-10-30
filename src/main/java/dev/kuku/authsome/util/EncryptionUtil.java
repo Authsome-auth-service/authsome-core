@@ -17,9 +17,21 @@ import java.util.Base64;
 @Slf4j
 public class EncryptionUtil {
 
+    /**
+     * The encryption algorithm used (AES).
+     */
     private static final String ALGORITHM = "AES";
+    /**
+     * The secret key specification for AES encryption.
+     */
     private final SecretKeySpec secretKey;
 
+    /**
+     * Constructs an EncryptionUtil with the provided secret key.
+     *
+     * @param key the secret key string (must be 16, 24, or 32 characters)
+     * @throws IllegalArgumentException if the key length is invalid
+     */
     public EncryptionUtil(@Value("${authsome.encryption.key:MySecretKey123456MySecretKey12}") String key) {
         // Ensure key is exactly 16, 24, or 32 bytes for AES
         byte[] keyBytes = key.getBytes();
