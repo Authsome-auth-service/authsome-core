@@ -2,7 +2,9 @@ package dev.kuku.authsome.controller;
 
 import dev.kuku.authsome.model.ResponseModel;
 import dev.kuku.authsome.model.SignupTenantRequest;
+import dev.kuku.authsome.model.TenantSignInRequest;
 import dev.kuku.authsome.orchestrator.TenantCoordinator;
+import dev.kuku.authsome.services.tenant.api.model.TokenData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -52,6 +54,27 @@ public class AuthsomeServiceController {
     public ResponseModel<Void> verifySignup(@PathVariable String otp, @RequestHeader("Signup-Token") String token) {
         log.trace("verifySignup : {}, {}", otp, token);
         tenantCoordinator.completeTenantSignupProcess(token, otp);
+        return ResponseModel.of(null);
+    }
+
+    @PostMapping("/sign-in/password")
+    public ResponseModel<TokenData> signIn(TenantSignInRequest body) {
+        log.trace("signIn : {}", body);
+        TokenData tokenData = tenantCoordinator.signInTenantWithPassword(body.identityType, body.identity, body.password);
+        return ResponseModel.of(tokenData);
+    }
+
+    @PutMapping("/refresh-token")
+    public ResponseModel<TokenData> refreshToken(String refreshToken) {
+        log.trace("refreshToken : {}...", refreshToken.substring(0, 5));
+        TokenData tokenData = tenantCoordinator.refreshTenantToken(refreshToken);
+        return ResponseModel.of(tokenData);
+    }
+
+    @DeleteMapping("/revoke-refresh-token")
+    public ResponseModel<Void> revokeRefreshToken(String refreshToken) {
+        log.trace("revokeRefreshToken : {}...", refreshToken.substring(0, 5));
+        tenantCoordinator.revokeTenantRefreshToken(refreshToken);
         return ResponseModel.of(null);
     }
 }

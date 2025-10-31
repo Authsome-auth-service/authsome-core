@@ -3,6 +3,9 @@ package dev.kuku.authsome.services.tenant.api;
 import dev.kuku.authsome.services.tenant.api.model.FetchedTenant;
 import dev.kuku.authsome.services.tenant.api.model.FetchedTenantIdentity;
 import dev.kuku.authsome.services.tenant.api.model.IdentityType;
+import dev.kuku.authsome.services.tenant.api.model.TenantAndRefreshToken;
+
+import java.util.Map;
 
 /**
  * Service interface for tenant management operations.
@@ -47,4 +50,29 @@ public interface TenantService {
      * @return the created tenant identity record
      */
     FetchedTenantIdentity addIdentityForTenant(String tenantId, IdentityType identityType, String identity);
+
+    boolean validateTenantCredentials(String tenantId, String rawPassword);
+
+    /**
+     * Create and persist a new session for the specified tenant. Should keep track of session expiration internally.
+     *
+     * @param tenantId id of the tenant
+     * @return id of the created session
+     */
+    String createTenantRefreshToken(String tenantId, Map<String, String> metadata);
+
+    /**
+     * Get tenant and refresh token info by refresh token. Rotate token if required.
+     *
+     * @param refreshToken current refresh token
+     * @return tenant and refresh token info
+     */
+    TenantAndRefreshToken refreshToken(String refreshToken);
+
+    /**
+     * Revoke the specified refresh token, making it invalid for future use.
+     *
+     * @param refreshToken refresh token to invalidate
+     */
+    void revokeTenantRefreshToken(String refreshToken);
 }

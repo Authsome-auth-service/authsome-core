@@ -1,5 +1,6 @@
 package dev.kuku.authsome.orchestrator;
 
+import dev.kuku.authsome.services.jwt.api.JwtService;
 import dev.kuku.authsome.services.notifier.api.NotifierService;
 import dev.kuku.authsome.services.otp.api.OtpService;
 import dev.kuku.authsome.services.otp.api.model.FetchedOtp;
@@ -7,6 +8,8 @@ import dev.kuku.authsome.services.otp.api.model.OtpType;
 import dev.kuku.authsome.services.tenant.api.TenantService;
 import dev.kuku.authsome.services.tenant.api.model.FetchedTenant;
 import dev.kuku.authsome.services.tenant.api.model.IdentityType;
+import dev.kuku.authsome.services.tenant.api.model.TenantAndRefreshToken;
+import dev.kuku.authsome.services.tenant.api.model.TokenData;
 import dev.kuku.authsome.util.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Orchestrator service for tenant-related operations.
@@ -31,6 +35,7 @@ public class TenantCoordinator {
     final TenantService tenantService;
     final OtpService otpService;
     final NotifierService notifierService;
+    final JwtService jwtService;
     final EncryptionUtil encryptionUtil;
 
     /**
@@ -167,5 +172,51 @@ public class TenantCoordinator {
         FetchedTenant createdUser = tenantService.createTenant(username, password);
         // Add identity for the tenant
         tenantService.addIdentityForTenant(createdUser.id(), identityType, identity);
+    }
+
+    public TokenData signInTenantWithPassword(IdentityType identityType, String identity, String password) {
+        log.trace("signInTenant : {}, {}", identityType, identity);
+        //Fetch tenant by identity
+        FetchedTenant fetchedTenant = tenantService.getTenantByIdentity(identityType, identity);
+        //Validate if the tenant exists
+        if (fetchedTenant == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with identity");
+        }
+        //Validate credentials
+        boolean valid = tenantService.validateTenantCredentials(fetchedTenant.id(), password);
+        if (!valid) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid credentials");
+        }
+        //Generate refresh token.
+        String refreshToken = tenantService.createTenantRefreshToken(fetchedTenant.id(), null);
+        //Generate access token
+        String accessToken = generateAccessToken(fetchedTenant.id());
+        TokenData tokenData = new TokenData(accessToken, refreshToken);
+        log.debug("Generated token data = {}... {}...", tokenData.accessToken().substring(5, 10), tokenData.refreshToken().substring(5, 10));
+        return tokenData;
+    }
+
+
+    public TokenData refreshTenantToken(String refreshToken) {
+        log.trace("refreshTenantToken : {}", refreshToken);
+        TenantAndRefreshToken tenantAndRefreshToken = tenantService.refreshToken(refreshToken);
+        if (tenantAndRefreshToken == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid refresh token");
+        }
+        //Generate new access token
+        String accessToken = generateAccessToken(tenantAndRefreshToken.tenant.id());
+        TokenData tokenData = new TokenData(accessToken, tenantAndRefreshToken.refreshToken);
+        log.debug("Generated new token data = {}... {}...", tokenData.accessToken().substring(5, 10), tokenData.refreshToken().substring(5, 10));
+        return tokenData;
+    }
+
+    public void revokeTenantRefreshToken(String refreshToken) {
+        log.info("revokeTenantRefreshToken : {}", refreshToken);
+        tenantService.revokeTenantRefreshToken(refreshToken);
+    }
+
+    private String generateAccessToken(String tenantId) {
+        String accessToken = jwtService.generateToken(tenantId, null, "AUTHSOME_TENANT", 3600, TimeUnit.MINUTES);
+        return accessToken;
     }
 }
