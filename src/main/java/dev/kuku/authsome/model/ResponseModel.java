@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.ToString;
 
 /**
- * Generic response model for API responses.
+ * Generic response dto for API responses.
  * <p>
  * Encapsulates a message and a data payload of any type.
  *
@@ -24,7 +24,7 @@ public class ResponseModel<T> {
     public T data;
 
     /**
-     * Creates a response model with the given data and no message.
+     * Creates a response dto with the given data and no message.
      *
      * @param data the response data
      * @param <T>  the type of the response data
@@ -35,7 +35,7 @@ public class ResponseModel<T> {
     }
 
     /**
-     * Creates a response model with the given data and message.
+     * Creates a response dto with the given data and message.
      *
      * @param data    the response data
      * @param message the message to include

@@ -1,9 +1,9 @@
 package dev.kuku.authsome.services.tenant.api;
 
-import dev.kuku.authsome.services.tenant.api.model.FetchedTenant;
-import dev.kuku.authsome.services.tenant.api.model.FetchedTenantIdentity;
-import dev.kuku.authsome.services.tenant.api.model.IdentityType;
-import dev.kuku.authsome.services.tenant.api.model.TenantAndRefreshToken;
+import dev.kuku.authsome.services.tenant.api.dto.FetchedTenant;
+import dev.kuku.authsome.services.tenant.api.dto.FetchedTenantIdentity;
+import dev.kuku.authsome.services.tenant.api.dto.IdentityType;
+import dev.kuku.authsome.services.tenant.api.dto.TenantAndRefreshToken;
 
 import java.util.Map;
 
@@ -59,7 +59,7 @@ public interface TenantService {
      * @param tenantId id of the tenant
      * @return id of the created session
      */
-    String createTenantRefreshToken(String tenantId, Map<String, String> metadata);
+    String createTenantRefreshToken(String tenantId, Map<String, Object> metadata);
 
     /**
      * Get tenant and refresh token info by refresh token. Rotate token if required.

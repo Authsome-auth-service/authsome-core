@@ -1,4 +1,4 @@
-package dev.kuku.authsome.services.tenant.api.model;
+package dev.kuku.authsome.services.tenant.api.dto;
 
 /**
  * Enum representing the types of identities supported for tenants.

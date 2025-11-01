@@ -1,4 +1,4 @@
-package dev.kuku.authsome.services.tenant.api.model;
+package dev.kuku.authsome.services.tenant.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
