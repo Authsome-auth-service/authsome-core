@@ -211,12 +211,21 @@ public class TenantCoordinator {
     }
 
     public void revokeTenantRefreshToken(String refreshToken) {
+        log.trace("revokeTenantRefreshToken : {}", refreshToken);
         log.info("revokeTenantRefreshToken : {}", refreshToken);
         tenantService.revokeTenantRefreshToken(refreshToken);
     }
 
     private String generateAccessToken(String tenantId) {
+        log.trace("generateAccessToken : {}", tenantId);
         String accessToken = jwtService.generateToken(tenantId, null, "AUTHSOME_TENANT", 3600, TimeUnit.MINUTES);
         return accessToken;
+    }
+
+    public String generateAPIKeyForTenant(String tenantId) {
+        log.trace("generateAPIKeyForTenant : {}, {}", tenantId);
+        String apiKey = tenantService.generateAPIKeyForTenant(tenantId);
+        log.debug("generateAPIKeyForTenant : {}, {}", apiKey, tenantId);
+        return apiKey;
     }
 }

@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/authsome-service")
 @Slf4j
-public class AuthsomeServiceController {
+public class AuthsomeController {
     /**
      * Orchestrator for tenant-related business logic.
      */
@@ -76,5 +76,12 @@ public class AuthsomeServiceController {
         log.trace("revokeRefreshToken : {}...", refreshToken.substring(0, 5));
         tenantCoordinator.revokeTenantRefreshToken(refreshToken);
         return ResponseModel.of(null);
+    }
+
+    @GetMapping("/api-key")
+    public ResponseModel<String> generateAPIKey() {
+        log.trace("generateAPIKey");
+        String tenantId = "123";
+        String apiKey = tenantCoordinator.generateAPIKeyForTenant(tenantId);
     }
 }
