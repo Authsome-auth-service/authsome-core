@@ -228,4 +228,23 @@ public class TenantCoordinator {
         log.debug("generateAPIKeyForTenant : {}, {}", apiKey, tenantId);
         return apiKey;
     }
+
+    public FetchedTenant getTenantFromApi(String apiKey) {
+        log.trace("getTenantFromApi : {}", apiKey);
+        FetchedTenant fetchedTenant = tenantService.getTenantByApiKey(apiKey);
+        log.debug("getTenantFromApi : {}", fetchedTenant);
+        return fetchedTenant;
+    }
+
+    public FetchedTenant getTenantFromAccessToken(String accessToken) {
+        log.trace("getTenantFromAccessToken : {}", accessToken);
+        var parsedData = jwtService.parseToken(accessToken);
+        if (parsedData.expired()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token is expired");
+        }
+        String tenantId = parsedData.subject();
+        FetchedTenant fetchedTenant = tenantService.getTenantById(tenantId);
+        log.debug("getTenantFromAccessToken : {}", fetchedTenant);
+        return fetchedTenant;
+    }
 }

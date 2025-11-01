@@ -91,4 +91,12 @@ public interface TenantService {
      * @return the tenant if found, null otherwise
      */
     FetchedTenant getTenantByApiKey(String apiKey);
+
+    /**
+     * Get tenant by its unique identifier.
+     *
+     * @param tenantId id of the tenant
+     * @return the tenant if found, null otherwise
+     */
+    FetchedTenant getTenantById(String tenantId);
 }

@@ -4,9 +4,11 @@ import dev.kuku.authsome.model.ResponseModel;
 import dev.kuku.authsome.model.SignupTenantRequest;
 import dev.kuku.authsome.model.TenantSignInRequest;
 import dev.kuku.authsome.orchestrator.TenantCoordinator;
+import dev.kuku.authsome.services.tenant.api.dto.FetchedTenant;
 import dev.kuku.authsome.services.tenant.api.dto.TokenData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -81,7 +83,7 @@ public class AuthsomeController {
     @GetMapping("/api-key")
     public ResponseModel<String> generateAPIKey() {
         log.trace("generateAPIKey");
-        String tenantId = "123";
-        String apiKey = tenantCoordinator.generateAPIKeyForTenant(tenantId);
+        FetchedTenant currentUser = (FetchedTenant) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String apiKey = tenantCoordinator.generateAPIKeyForTenant(currentUser.id());
     }
 }
