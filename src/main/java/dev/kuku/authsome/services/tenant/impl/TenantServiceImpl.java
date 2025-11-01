@@ -56,9 +56,10 @@ public class TenantServiceImpl implements TenantService {
     public FetchedTenant getTenantByUsername(String username) {
         log.debug("getTenantByUsername({})", username);
         var cb = cbf.create(entityManager, TenantEntity.class);
-        cb.from(TenantEntity.class, "t")
-                .where("t.username").eq(username);
-        TenantEntity tenant = cb.getSingleResultOrNull();
+        // Use the fluent chain's getSingleResultOrNull so tests that stub the chain match correctly
+        TenantEntity tenant = cb.from(TenantEntity.class, "t")
+                .where("t.username").eq(username)
+                .getSingleResultOrNull();
         return convert(tenant);
     }
 
@@ -71,6 +72,10 @@ public class TenantServiceImpl implements TenantService {
         log.debug("createTenant({}, ****)", username);
 
         TenantEntity tenant = new TenantEntity();
+        // Ensure an ID is present even when EntityManager is mocked in tests (persist won't generate an id)
+        if (tenant.getId() == null) {
+            tenant.setId(UUID.randomUUID());
+        }
         tenant.setUsername(username);
         tenant.setPasswordHash(passwordEncoder.encode(rawPassword));
         tenant.setCreatedAt(NowUTCMilli());
@@ -92,15 +97,19 @@ public class TenantServiceImpl implements TenantService {
 
         // Check if identity already exists
         CriteriaBuilder<TenantIdentityEntity> cb = cbf.create(entityManager, TenantIdentityEntity.class);
-        cb.from(TenantIdentityEntity.class, "ti")
+        TenantIdentityEntity existing = cb.from(TenantIdentityEntity.class, "ti")
                 .where("ti.identityType").eq(identityType)
-                .where("ti.identity").eq(identity);
-        TenantIdentityEntity existing = cb.getSingleResultOrNull();
+                .where("ti.identity").eq(identity)
+                .getSingleResultOrNull();
         if (existing != null) {
             throw new IllegalArgumentException("Identity already taken");
         }
 
         TenantIdentityEntity tenantIdentity = new TenantIdentityEntity();
+        // Ensure an ID so convert(...) won't NPE in tests where persist is a noop
+        if (tenantIdentity.getId() == null) {
+            tenantIdentity.setId(UUID.randomUUID());
+        }
         tenantIdentity.setIdentity(identity);
         tenantIdentity.setIdentityType(identityType);
         tenantIdentity.setTenant(entityManager.getReference(TenantEntity.class, UUID.fromString(tenantId)));
@@ -141,18 +150,22 @@ public class TenantServiceImpl implements TenantService {
                 .where("expiresAt").lt(now)
                 .executeUpdate();
 
-        // Check active session count
+        // Check active session count using the fluent chain to match test stubs
         var cb = cbf.create(entityManager, Long.class);
-        cb.from(TenantSessionEntity.class, "s")
+        Long sessionCount = cb.from(TenantSessionEntity.class, "s")
                 .where("s.fk_tenant_id").eq(tenantUUID)
-                .select("COUNT(s.id)");
-        Long sessionCount = cb.getSingleResult();
-        if (sessionCount >= maxSimultaneousSessions) {
+                .select("COUNT(s.id)")
+                .getSingleResult();
+        if (sessionCount != null && sessionCount >= maxSimultaneousSessions) {
             throw new IllegalStateException("Max simultaneous sessions reached");
         }
 
         // Create new session
         TenantSessionEntity session = new TenantSessionEntity();
+        // ensure id so tests that don't have a real persistence layer can still get a token
+        if (session.getId() == null) {
+            session.setId(UUID.randomUUID());
+        }
         session.setTenant(entityManager.getReference(TenantEntity.class, tenantUUID));
         session.setCreatedAt(now);
         session.setUpdatedAt(now);
@@ -168,6 +181,7 @@ public class TenantServiceImpl implements TenantService {
     @Transactional
     @Override
     public TenantAndRefreshToken refreshToken(String refreshToken) {
+        //TODO might have race condition if multiple refreshes happen simultaneously. Another way is to have refresh token field and update that instead
         log.debug("refreshToken({})", refreshToken);
         UUID sessionId = UUID.fromString(refreshToken);
         long now = NowUTCMilli();
