@@ -4,9 +4,11 @@ import dev.kuku.authsome.model.ResponseModel;
 import dev.kuku.authsome.model.SignupTenantRequest;
 import dev.kuku.authsome.model.TenantSignInRequest;
 import dev.kuku.authsome.orchestrator.TenantCoordinator;
+import dev.kuku.authsome.services.tenant.api.dto.FetchedTenant;
 import dev.kuku.authsome.services.tenant.api.dto.TokenData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/authsome-service")
 @Slf4j
-public class AuthsomeServiceController {
+public class AuthsomeController {
     /**
      * Orchestrator for tenant-related business logic.
      */
@@ -76,5 +78,12 @@ public class AuthsomeServiceController {
         log.trace("revokeRefreshToken : {}...", refreshToken.substring(0, 5));
         tenantCoordinator.revokeTenantRefreshToken(refreshToken);
         return ResponseModel.of(null);
+    }
+
+    @GetMapping("/api-key")
+    public ResponseModel<String> generateAPIKey() {
+        log.trace("generateAPIKey");
+        FetchedTenant currentUser = (FetchedTenant) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String apiKey = tenantCoordinator.generateAPIKeyForTenant(currentUser.id());
     }
 }

@@ -211,12 +211,40 @@ public class TenantCoordinator {
     }
 
     public void revokeTenantRefreshToken(String refreshToken) {
+        log.trace("revokeTenantRefreshToken : {}", refreshToken);
         log.info("revokeTenantRefreshToken : {}", refreshToken);
         tenantService.revokeTenantRefreshToken(refreshToken);
     }
 
     private String generateAccessToken(String tenantId) {
+        log.trace("generateAccessToken : {}", tenantId);
         String accessToken = jwtService.generateToken(tenantId, null, "AUTHSOME_TENANT", 3600, TimeUnit.MINUTES);
         return accessToken;
+    }
+
+    public String generateAPIKeyForTenant(String tenantId) {
+        log.trace("generateAPIKeyForTenant : {}, {}", tenantId);
+        String apiKey = tenantService.generateAPIKeyForTenant(tenantId);
+        log.debug("generateAPIKeyForTenant : {}, {}", apiKey, tenantId);
+        return apiKey;
+    }
+
+    public FetchedTenant getTenantFromApi(String apiKey) {
+        log.trace("getTenantFromApi : {}", apiKey);
+        FetchedTenant fetchedTenant = tenantService.getTenantByApiKey(apiKey);
+        log.debug("getTenantFromApi : {}", fetchedTenant);
+        return fetchedTenant;
+    }
+
+    public FetchedTenant getTenantFromAccessToken(String accessToken) {
+        log.trace("getTenantFromAccessToken : {}", accessToken);
+        var parsedData = jwtService.parseToken(accessToken);
+        if (parsedData.expired()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token is expired");
+        }
+        String tenantId = parsedData.subject();
+        FetchedTenant fetchedTenant = tenantService.getTenantById(tenantId);
+        log.debug("getTenantFromAccessToken : {}", fetchedTenant);
+        return fetchedTenant;
     }
 }

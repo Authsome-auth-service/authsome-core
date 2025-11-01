@@ -75,4 +75,28 @@ public interface TenantService {
      * @param refreshToken refresh token to invalidate
      */
     void revokeTenantRefreshToken(String refreshToken);
+
+    /**
+     * Generate an API key for the specified tenant. This will represent the tenant in API calls.
+     *
+     * @param tenantId id of the tenant
+     * @return api key string
+     */
+    String generateAPIKeyForTenant(String tenantId);
+
+    /**
+     * Get tenant by API key.
+     *
+     * @param apiKey api key string
+     * @return the tenant if found, null otherwise
+     */
+    FetchedTenant getTenantByApiKey(String apiKey);
+
+    /**
+     * Get tenant by its unique identifier.
+     *
+     * @param tenantId id of the tenant
+     * @return the tenant if found, null otherwise
+     */
+    FetchedTenant getTenantById(String tenantId);
 }
