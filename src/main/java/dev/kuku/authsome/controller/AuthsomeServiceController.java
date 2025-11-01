@@ -4,7 +4,7 @@ import dev.kuku.authsome.model.ResponseModel;
 import dev.kuku.authsome.model.SignupTenantRequest;
 import dev.kuku.authsome.model.TenantSignInRequest;
 import dev.kuku.authsome.orchestrator.TenantCoordinator;
-import dev.kuku.authsome.services.tenant.api.model.TokenData;
+import dev.kuku.authsome.services.tenant.api.dto.TokenData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;

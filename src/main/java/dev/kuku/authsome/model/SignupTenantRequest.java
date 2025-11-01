@@ -1,12 +1,12 @@
 package dev.kuku.authsome.model;
 
-import dev.kuku.authsome.services.tenant.api.model.IdentityType;
+import dev.kuku.authsome.services.tenant.api.dto.IdentityType;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * Request model for tenant signup.
+ * Request dto for tenant signup.
  * <p>
  * Contains the necessary information to initiate a new tenant registration,
  * including identity verification details and account credentials.
