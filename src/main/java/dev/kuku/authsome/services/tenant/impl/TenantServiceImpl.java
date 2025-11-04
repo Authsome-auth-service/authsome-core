@@ -7,6 +7,7 @@ import dev.kuku.authsome.services.tenant.api.dto.FetchedTenant;
 import dev.kuku.authsome.services.tenant.api.dto.FetchedTenantIdentity;
 import dev.kuku.authsome.services.tenant.api.dto.IdentityType;
 import dev.kuku.authsome.services.tenant.api.dto.TenantAndRefreshToken;
+import dev.kuku.authsome.services.tenant.impl.entity.TenantApiEntity;
 import dev.kuku.authsome.services.tenant.impl.entity.TenantEntity;
 import dev.kuku.authsome.services.tenant.impl.entity.TenantIdentityEntity;
 import dev.kuku.authsome.services.tenant.impl.entity.TenantSessionEntity;
@@ -225,6 +226,42 @@ public class TenantServiceImpl implements TenantService {
         if (deleted == 0) {
             log.warn("No session found to revoke for refreshToken({})", refreshToken);
         }
+    }
+
+    @Override
+    public String generateAPIKeyForTenant(String tenantId) {
+        log.debug("generateAPIKeyForTenant({})", tenantId);
+        var user = new TenantEntity();
+        user.setId(UUID.fromString(tenantId));
+        var apiKey = new TenantApiEntity(null, user, null, null, null);
+        entityManager.persist(apiKey);
+        entityManager.flush();
+        log.debug("generated api = {}", apiKey);
+        return apiKey.key;
+    }
+
+    @Override
+    public FetchedTenant getTenantByApiKey(String apiKey) {
+        log.debug("getTenantByApiKey({})", apiKey);
+        var cb = cbf.create(entityManager, TenantApiEntity.class);
+        cb.where("key").eq(apiKey);
+        TenantApiEntity apiEntity = cb.getSingleResultOrNull();
+        if (apiEntity != null) {
+            return convert(apiEntity.tenant);
+        }
+        return null;
+    }
+
+    @Override
+    public FetchedTenant getTenantById(String tenantId) {
+        log.debug("getTenantById({})", tenantId);
+        var cb = cbf.create(entityManager, TenantApiEntity.class);
+        cb.where("fk_tenant_id").eq(tenantId);
+        TenantApiEntity apiEntity = cb.getSingleResultOrNull();
+        if (apiEntity != null) {
+            return convert(apiEntity.tenant);
+        }
+        return null;
     }
 
     // ===========================================================
