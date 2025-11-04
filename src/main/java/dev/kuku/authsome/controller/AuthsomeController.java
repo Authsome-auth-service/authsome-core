@@ -85,5 +85,6 @@ public class AuthsomeController {
         log.trace("generateAPIKey");
         FetchedTenant currentUser = (FetchedTenant) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String apiKey = tenantCoordinator.generateAPIKeyForTenant(currentUser.id());
+        return ResponseModel.of(apiKey);
     }
 }
