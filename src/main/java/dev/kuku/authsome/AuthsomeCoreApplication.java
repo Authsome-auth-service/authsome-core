@@ -18,4 +18,5 @@ public class AuthsomeCoreApplication {
         SpringApplication.run(AuthsomeCoreApplication.class, args);
     }
 
+    //TODO define rest endpoint
 }
