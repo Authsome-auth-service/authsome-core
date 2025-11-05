@@ -1,6 +1,6 @@
 package dev.kuku.authsome.config.securityFilter;
 
-import dev.kuku.authsome.orchestrator.TenantCoordinator;
+import dev.kuku.authsome.coordinator.TenantCoordinator;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,4 +1,4 @@
-package dev.kuku.authsome.orchestrator;
+package dev.kuku.authsome.coordinator;
 
 import dev.kuku.authsome.services.jwt.api.JwtService;
 import dev.kuku.authsome.services.notifier.api.NotifierService;

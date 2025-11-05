@@ -3,7 +3,7 @@ package dev.kuku.authsome.controller;
 import dev.kuku.authsome.model.ResponseModel;
 import dev.kuku.authsome.model.SignupTenantRequest;
 import dev.kuku.authsome.model.TenantSignInRequest;
-import dev.kuku.authsome.orchestrator.TenantCoordinator;
+import dev.kuku.authsome.coordinator.TenantCoordinator;
 import dev.kuku.authsome.services.tenant.api.dto.FetchedTenant;
 import dev.kuku.authsome.services.tenant.api.dto.TokenData;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/authsome-service")
+@RequestMapping("/api/v1/authsome")
 @Slf4j
 public class AuthsomeController {
     /**
