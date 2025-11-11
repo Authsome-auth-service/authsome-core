@@ -1,35 +1,23 @@
-package dev.kuku.authsome.controller;
+package dev.kuku.authsome.controller.project;
 
 import dev.kuku.authsome.coordinator.ProjectCoordinator;
 import dev.kuku.authsome.model.*;
 import dev.kuku.authsome.services.project.api.model.FetchedProjectUser;
 import dev.kuku.authsome.services.project.api.model.FetchedProjectUserIdentity;
-import dev.kuku.authsome.services.project.api.model.FetchedTenantProject;
 import dev.kuku.authsome.services.tenant.api.dto.FetchedTenant;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-@SuppressWarnings("ALL")
+@SuppressWarnings("LoggingSimilarMessage")
 @RestController
-@RequestMapping("/api/v1/project")
+@RequestMapping("/api/v1/project/user")
 @Slf4j
-@RequiredArgsConstructor
-public class ProjectController {
-    final ProjectCoordinator projectCoordinator;
-
-    @PostMapping("/")
-    public ResponseModel<FetchedTenantProject> createProject(@RequestBody CreateProjectRequest body) {
-        log.debug("Received request to create project {}", body);
-        FetchedTenant currentUser = getCurrentUser();
-        FetchedTenantProject createdProject = projectCoordinator.createProject(currentUser.id(), body);
-        return ResponseModel.of(createdProject);
+public class ProjectUserController extends ProjectController {
+    public ProjectUserController(ProjectCoordinator projectCoordinator) {
+        super(projectCoordinator);
     }
 
-    @PostMapping("/user")
+    @PostMapping("/")
     public ResponseModel<FetchedProjectUser> createProjectUser(@RequestBody CreateProjectUserRequest body) {
         log.debug("Received request to create project user {}", body);
         var currentUser = getCurrentUser();
@@ -47,7 +35,7 @@ public class ProjectController {
         return ResponseModel.of(addedIdentity);
     }
 
-    @PostMapping("verify-identity")
+    @PostMapping("/verify-identity")
     public ResponseModel<String> startAddIdentityProcessForUser(@RequestBody AddIdentityForProjectUserRequest body) {
         log.debug("Received request to start add identity for user {}", body);
         var cu = getCurrentUser();
@@ -55,7 +43,7 @@ public class ProjectController {
         return ResponseModel.of(token);
     }
 
-    @PutMapping("verify-identity")
+    @PutMapping("/verify-identity")
     public ResponseModel<FetchedProjectUserIdentity> verifyIdentityForUser(@RequestBody VerifyIdentityForUserRequest body, @RequestHeader("Verification-Token") String token) {
         log.debug("Received request to verify identity for user {}", body);
         var cu = getCurrentUser();
@@ -64,12 +52,19 @@ public class ProjectController {
         return ResponseModel.of(addedIdentity);
     }
 
-    private FetchedTenant getCurrentUser() {
-        FetchedTenant currentUser = (FetchedTenant) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        log.debug("Current user is {}", currentUser);
-        if (currentUser == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
-        }
-        return currentUser;
+    @PostMapping("/sign-in")
+    public ResponseModel<String> signInUserWithCredential(@RequestBody SignInUserWithCredentialRequest body) {
+        log.debug("Received request to sign in user with credential {}", body);
+        return ResponseModel.of("FAKE TOKEN");
+    }
+
+    @PostMapping("/sign-in-otp")
+    public ResponseModel<String> signInWithOtp(@RequestBody SignInWithOtpRequest body) {
+        log.debug("Received request to sign in with otp {}", body);
+    }
+
+    @PostMapping("/sign-in-otp-verify")
+    public ResponseModel<String> signInWithOtpVerify(@RequestHeader("Verification-Token") String token, @RequestBody SignInWithOtpVerifyRequest body) {
+        log.debug("Received request to sign in with otp verify {}", body);
     }
 }
